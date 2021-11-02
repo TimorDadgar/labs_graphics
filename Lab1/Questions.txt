@@ -1,0 +1,75 @@
+Question 1:
+What is the output of your program? That is, what hardware (renderer) do
+you have, and what OpenGL version does it support?
+
+Answer 1:
+
+Renderer:
+Intel(R) HD Graphics 620
+OpenGL version supported:
+4.6.0 - Build 27.20.100.8854
+
+
+
+Question 2:
+Which usage flag did you select, and why?
+GL_STREAM/STATIC/DYNAMIC_DRAW/READ/COPY
+
+Answer 2:
+
+STATIC_DRAW, we choose this because we are inserting the data once into the buffer once and the data is not being modified 
+and it is continously drawn. 
+
+Question 3:
+Which dimensions (left, right, etc) in the screen space (that is, in the window
+on your screen) do the x, y and z coordinates of your vertex position attributes
+map to?
+
+Answer 3:
+
+x in our case refers to the left and right position of the vertix
+y in our case refers to up and down placement of the vertix
+z in our case depth of the triangle, so when drawing two triangles then one would be drawn untop of the other according to the z value
+
+
+Question 4:
+What are the limits for x and y and what happens if you exceed them?
+
+Answer 4: 
+
+x and y limits are -1 <= x <= 1 and -1 <= y <= 1.
+When exceeding the limits the program acts as if the vertices outside are of the glfw window leaving us with a primitive that is partially outside
+of our scope and partially rendered. 
+
+Question 5:
+What are the limits for z and what happens if you exceed them? Why? (It
+has to do with normalised device coordinates.)
+
+Answer 5: 
+
+In the case of z being more than 1 then it shifts the object's position "behind our heads",
+ex: 		{-1.0f, -1.0f, 2.0f},
+		{1.0f, -1.0f, 0.0f},
+		{1.0f, 1.0f, 0.0f} 	This points array would make the left corner of the triangle behind our head
+
+less than -1 and the object is too far away and will be oustide of the viewspace "box".
+		{-1.0f, -1.0f, -1.1f},
+		{1.0f, -1.0f, -0.5f},
+		{1.0f, 1.0f, -0.5f}	This points array would make the left corner go outside of our view space box
+
+
+Question 6:
+Should the matrices be multiplied as M × V × P or P × V × M? Why?
+
+Answer 6:
+
+MxVxP. Firstly we have the local coordinates which we create and with the addition of the model matrix we get "world coordinates".
+This includes our object and we then add a camera to it. From the world space we're able to get the camera space "view coordinates".
+After that we add the projection matrix to get a sense of scale where clipping is used.
+
+The way we have designed the matrices is by having the object as focus and then basing our new coordinates on the coordinates before. PxVxM could be
+theoretically possible but then the matrices and the way to go about solving them from the matrix before has to be different. MxVxP is the
+correct order.
+
+Mathematically we have to add them in this order or else we would end up with an entirely different result with PxVxM since matrices aren't commutative. 
+But the glm::mat4 matrices are row-major and not column-major that is why we end up doing it in PxVxM instead of doing MxVxP with the transposed matrices. 
