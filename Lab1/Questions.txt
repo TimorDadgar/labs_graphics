@@ -61,15 +61,13 @@ less than -1 and the object is too far away and will be oustide of the viewspace
 Question 6:
 Should the matrices be multiplied as M × V × P or P × V × M? Why?
 
-Answer 6:
+Answer 6 (updated):
 
-MxVxP. Firstly we have the local coordinates which we create and with the addition of the model matrix we get "world coordinates".
+
+P x V x M. Mathematically we have to add them in this order or else we would end up with an entirely different result since matrices aren't commutative. 
+But the glm::mat4 matrices are row-major and not column-major that is why we end up doing it in PxVxM instead of doing MxVxP with the transposed matrices. 
+Matrices are associative and therefore the multiplication is actually from the inside to the oustide P ( V ( M * v ) ).
+
+Firstly we have the local coordinates which we create and with the addition of the model matrix we get "world coordinates".
 This includes our object and we then add a camera to it. From the world space we're able to get the camera space "view coordinates".
 After that we add the projection matrix to get a sense of scale where clipping is used.
-
-The way we have designed the matrices is by having the object as focus and then basing our new coordinates on the coordinates before. PxVxM could be
-theoretically possible but then the matrices and the way to go about solving them from the matrix before has to be different. MxVxP is the
-correct order.
-
-Mathematically we have to add them in this order or else we would end up with an entirely different result with PxVxM since matrices aren't commutative. 
-But the glm::mat4 matrices are row-major and not column-major that is why we end up doing it in PxVxM instead of doing MxVxP with the transposed matrices. 
