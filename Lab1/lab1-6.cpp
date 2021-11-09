@@ -11,12 +11,16 @@
 //-------------------------------------------------------------------------//
 // You can store the rotation angles here, for example
 float g_rotation[2] = { 0, 0 };
-float far = -100.0;
-float near = -1.0;
-float right = 1.0;
+float f = 100.0;
+float n = 1.0;
+float A = -((f + n) / (f - n));
+float B = -((2 * f * n) / (f - n));
+
+/*float right = 1.0;
 float left = -1.0;
 float top = 1.0;
 float bottom = -1.0;
+*/
 //-------------------------------------------------------------------------//
 GLuint shader_program;
 GLuint location_MVP;
@@ -31,6 +35,7 @@ void MUL_4x4 (GLfloat (*C)[4], const GLfloat (*A)[4], const GLfloat (*B)[4])
 	int r, c, i, j, k;
 	r = 4; // rows
 	c = 4; // columns
+	float tempVal = 0;
 
 	// printf("multiply of the matrix=\n");
 	for (i = 0; i < r; i++)
@@ -39,12 +44,14 @@ void MUL_4x4 (GLfloat (*C)[4], const GLfloat (*A)[4], const GLfloat (*B)[4])
 		{
 			for (k = 0; k < c; k++)
 			{
-				C[i][j] += A[i][k] * B[k][j];
+				tempVal += A[i][k] * B[k][j];
 			}
+			C[i][j] = tempVal;
+			tempVal = 0;
 		}
 	}
 	//for printing result    
-	/*
+
 	for (i = 0; i < r; i++)
 	{
 		for (j = 0; j < c; j++)
@@ -53,7 +60,6 @@ void MUL_4x4 (GLfloat (*C)[4], const GLfloat (*A)[4], const GLfloat (*B)[4])
 		}
 		printf("\n");
 	}
-	*/
 	//-------------------------------------------------------------------------//
 }
 
@@ -322,10 +328,10 @@ int main(int argc, char const *argv[])
 		};
 		MUL_4x4(modelViewMatrix, inverseViewMatrix, modelMatrix);
 		GLfloat projectionMatrix[4][4] = {
-			{ 2.0f / (right - left), 0.0f, 0.0f, -((right + left) / (right - left))},
-			{ 0.0f, 2.0f / (top - bottom), 0.0f, -((top + bottom) / (top - bottom))},
-			{ 0.0f, 0.0f, -(2.0f / (far - near)), -((far + near) / (far - near))},
-			{ 0.0f, 0.0f, 0.0f, 1.0f }
+			{ float(w_height)/float(w_width), 0.0f, 0.0f, 0.0f },
+			{ 0.0f, 1.0f, 0.0f, 0.0f },
+			{ 0.0f, 0.0f, A, B },
+			{ 0.0f, 0.0f, -1.0f, 0.0f }
 		};
 		GLfloat modelViewProjectionMatrix[4][4] = {
 			{ 1, 0, 0, 0 },
@@ -360,4 +366,3 @@ int main(int argc, char const *argv[])
 	glfwTerminate();
 	exit(EXIT_SUCCESS);
 }
-

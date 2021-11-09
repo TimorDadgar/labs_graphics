@@ -1,6 +1,8 @@
 #version 400
 
 layout(location=0) in vec4 vp;
+out vec3 position;
+
 uniform mat4 u_MVP;
 
 void main () {
@@ -13,6 +15,7 @@ void main () {
 	// -------------------------------------------------------------------------//
 
 	gl_Position = u_MVP * vp;
+	position = vec3(vp);
 
 };
   
