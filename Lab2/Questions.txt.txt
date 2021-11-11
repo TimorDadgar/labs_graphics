@@ -1,0 +1,18 @@
+Question: 1
+What value does your BRDF return for the red/green/blue channel? Why?
+
+
+Answer: 1
+A simple lambartian brdf isn't dependent on the function arguments and can be simply
+recreated by putting the light to a constant value. In our case we chose
+(0.3, 0.8, 0.8) since it gives a clear distinction of where the matte surface is. 
+Light is multiplied by 3 to get a brighter light. 
+
+
+Question: 2
+
+Answer: 2
+
+plot is included as a "bifogad fil" and a python code called brdf_1dgraph.py
+
+
