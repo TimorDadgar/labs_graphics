@@ -22,6 +22,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION 
 #include "tiny_obj_loader.h"
+#include <vector>
 
 //-------------------------------------------------------------------------//
 // You can store the rotation angles here, for example
@@ -32,7 +33,6 @@ float near = 1.0;
 int w_height = 600;
 int w_width = 800;
 
-int light_count = 1;
 //-------------------------------------------------------------------------//
 GLuint shader_program;
 
@@ -215,24 +215,24 @@ int main(int argc, char const* argv[])
 	GLuint vbo_p;
 	glGenBuffers(1, &vbo_p);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_p);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(shapes[0].mesh.positions), &shapes[0].mesh.positions, GL_STATIC_DRAW); //Chose GL_STATIC_DRAW because it is accessing data once and then only used for drawing
+	glBufferData(GL_ARRAY_BUFFER, (shapes[0].mesh.positions).size()*sizeof(float), &(shapes[0].mesh.positions[0]), GL_DYNAMIC_DRAW); //Chose GL_STATIC_DRAW because it is accessing data once and then only used for drawing
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	
 	GLuint vbo_n;
 	glGenBuffers(1, &vbo_n);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_n);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(shapes[0].mesh.normals), &shapes[0].mesh.normals, GL_STATIC_DRAW); //Chose GL_STATIC_DRAW because it is accessing data once and then only used for drawing
+	glBufferData(GL_ARRAY_BUFFER, (shapes[0].mesh.normals).size()*sizeof(float), &(shapes[0].mesh.normals[0]), GL_DYNAMIC_DRAW); //Chose GL_STATIC_DRAW because it is accessing data once and then only used for drawing
 	glEnableVertexAttribArray(1);
 	// OBS! kolla ifall vec4 iterering går till såhär, med 4 som stride.
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 
 
 	// 3. Create EBO
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(shapes[0].mesh.indices), &shapes[0].mesh.indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (shapes[0].mesh.indices).size()*sizeof(float), &(shapes[0].mesh.indices[0]), GL_DYNAMIC_DRAW);
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------------//
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------------//
 	// load and compile shaders  "../lab2-2_vs.glsl" and "../lab2-2_fs.glsl"
@@ -282,11 +282,15 @@ int main(int argc, char const* argv[])
 		glm::mat4 viewMatrix = glm::mat4(1.0f);
 		glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
+		glm::vec3 view_vec = glm::vec3(0.0f, 0.0f, -4.0f);
+
+		modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(g_rotation[0]), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(g_rotation[1]), glm::vec3(1.0f, 0.0f, 0.0f));
 		modelMatrix = glm::scale(modelMatrix, glm::vec3(10.0f, 10.0f, 10.0f));
 
-		viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -2.0f));
+		viewMatrix = glm::translate(viewMatrix, view_vec);
+
 		projectionMatrix = glm::perspective(glm::radians(60.0f), float(w_width) / float(w_height), near, far);
 
 		GLuint location_model = glGetUniformLocation(shader_program, "model");
@@ -299,16 +303,17 @@ int main(int argc, char const* argv[])
 		glUniformMatrix4fv(location_view, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 		glUniformMatrix4fv(location_projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-
+		GLuint location_view_vector = glGetUniformLocation(shader_program, "view_vector");
 		GLuint location_light = glGetUniformLocation(shader_program, "light_count");
 		GLuint location_light_pos = glGetUniformLocation(shader_program, "light_position");
 		GLuint location_light_col = glGetUniformLocation(shader_program, "light_colour");
 
-
-		glm::vec3 light_pos = glm::vec3(5, 5, 5);
+		int light_count = 1;
+		glm::vec3 light_pos = glm::vec3(0, 0, 80);
 		//glm::vec3 light_positions[4] = { glm::vec3(3, 3, 3), glm::vec3(3, 3, 3), glm::vec3(3, 3, 3), glm::vec3(3, 3, 3) };
 		glm::vec3 light_col = glm::vec3(1, 1, 1);
 
+		glUniform3fv(location_view_vector, 1, glm::value_ptr(view_vec));
 		glUniform1i(location_light, light_count);
 		glUniform3fv(location_light_pos, 1, glm::value_ptr(light_pos));
 		glUniform3fv(location_light_col, 1, glm::value_ptr(light_col));
