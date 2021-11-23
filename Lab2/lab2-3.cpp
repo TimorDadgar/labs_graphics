@@ -303,7 +303,6 @@ int main(int argc, char const* argv[])
 		glUniformMatrix4fv(location_view, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 		glUniformMatrix4fv(location_projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-		GLuint location_view_vector = glGetUniformLocation(shader_program, "view_vector");
 		GLuint location_light = glGetUniformLocation(shader_program, "light_count");
 		GLuint location_light_pos = glGetUniformLocation(shader_program, "light_position");
 		GLuint location_light_col = glGetUniformLocation(shader_program, "light_colour");
@@ -313,7 +312,6 @@ int main(int argc, char const* argv[])
 		//glm::vec3 light_positions[4] = { glm::vec3(3, 3, 3), glm::vec3(3, 3, 3), glm::vec3(3, 3, 3), glm::vec3(3, 3, 3) };
 		glm::vec3 light_col = glm::vec3(1, 1, 1);
 
-		glUniform3fv(location_view_vector, 1, glm::value_ptr(view_vec));
 		glUniform1i(location_light, light_count);
 		glUniform3fv(location_light_pos, 1, glm::value_ptr(light_pos));
 		glUniform3fv(location_light_col, 1, glm::value_ptr(light_col));
