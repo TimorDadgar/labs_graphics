@@ -20,7 +20,7 @@ vec3 F(vec3 n, vec3 l){
 
 float D(vec3 m){
 
-	int x_scalar = 1;
+	int x_scalar = 0;
 	float alpha = 0.3;
 
 	float n_scalar_m = dot(normalize(normal), normalize(m));
@@ -65,8 +65,8 @@ vec3 cook_torrance(vec3 light_dir, vec3 camera_dir){
 
 void main () {
 
-	vec3 light_direction = light_position[0] - position;
-	vec3 camera_direction = vec3(0.0f, 0.0f, 0.0f) - position;
+	vec3 light_direction = normalize(light_position[0] - position);
+	vec3 camera_direction = normalize(vec3(0.0f, 0.0f, 0.0f) - position);
  
 	for ( int l = 0; l < light_count; ++l )
 	{
