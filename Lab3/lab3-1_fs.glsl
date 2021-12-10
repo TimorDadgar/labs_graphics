@@ -10,6 +10,8 @@ uniform int light_count;
 uniform vec3 light_position[4]; //add [4] // can have up to 4 light sources
 uniform vec3 light_colour[4]; //add [4]
 
+vec3 normal_n = normalize(normal);
+
 
 vec3 F(vec3 n, vec3 l){
 	
@@ -53,14 +55,13 @@ float G(vec3 light_dir, vec3 camera_dir, vec3 norm){
 vec3 cook_torrance(vec3 light_dir, vec3 camera_dir){
 
 	vec3 h = normalize(light_dir+camera_dir);
-	vec4 tex = texture(tex_sampler, uv_coords);
 	
     float kL = 0.2f;
     float kg = 0.8f; 
     vec3 pL = vec3(0.8, 0.8, 0.3);
 	vec3 norm = normalize(normal); 
 
-    vec3 cook_torr =tex.r * kL*(pL) + kg*((F(h, light_dir)*G(light_dir, camera_dir, norm)*D(h))/ (4*(abs(dot(norm, light_dir))*(abs(dot(norm, camera_dir))))));
+    vec3 cook_torr = kL*(pL) + kg*((F(h, light_dir)*G(light_dir, camera_dir, norm)*D(h))/ (4*(abs(dot(norm, light_dir))*(abs(dot(norm, camera_dir))))));
 
 	return cook_torr;
 }
@@ -68,20 +69,14 @@ vec3 cook_torrance(vec3 light_dir, vec3 camera_dir){
 
 void main () {
 	
-	vec3 normal_n = normalize(normal);
-	/*
-	frag_colour.r = (normal_n.x+1)*0.5;
-	frag_colour.g = (normal_n.y+1)*0.5;
-	frag_colour.b = (normal_n.z+1)*0.5;
-	*/
 	vec3 light_direction = normalize(light_position[0] - position);
 	vec3 camera_direction = normalize(vec3(0.0f, 0.0f, 0.0f) - position);
- 
+	vec4 tex = texture(tex_sampler, uv_coords);
+
 	for ( int l = 0; l < light_count; ++l )
 	{
-		frag_colour = light_colour[0]*3 * cook_torrance(light_direction, camera_direction) * max(0.2f, (dot(normalize(light_direction), normalize(normal))));
+		frag_colour = tex.rgb * light_colour[0]*3 * cook_torrance(light_direction, camera_direction) * max(0.2f, (dot(normalize(light_direction), normalize(normal))));
 	}
 
-	//frag_colour = vec3(position) + 0.45;
 }
 

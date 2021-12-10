@@ -72,8 +72,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	if ((key == GLFW_KEY_R) && action == GLFW_PRESS)
 	{
 		//implement reloading of the shaders on the fly
-		std::string vertex_shader_str = readFile("../lab3-1_vs.glsl");
-		std::string fragment_shader_str = readFile("../lab3-1_fs.glsl");
+		std::string vertex_shader_str = readFile("../lab3-2_vs.glsl");
+		std::string fragment_shader_str = readFile("../lab3-2_fs.glsl");
 		const char* vertex_shader_src = vertex_shader_str.c_str();
 		const char* fragment_shader_src = fragment_shader_str.c_str();
 
@@ -394,8 +394,8 @@ int main(int argc, char const* argv[])
 	//-----------------------------------------------------------------------------------------------------------------------------------------------------------//
 	// load and compile shaders  "../lab3_vs.glsl" and "../lab3-1_fs.glsl"
 
-	std::string vertex_shader_str = readFile("../lab3-1_vs.glsl");
-	std::string fragment_shader_str = readFile("../lab3-1_fs.glsl");
+	std::string vertex_shader_str = readFile("../lab3-2_vs.glsl");
+	std::string fragment_shader_str = readFile("../lab3-2_fs.glsl");
 	const char* vertex_shader_src = vertex_shader_str.c_str();
 	const char* fragment_shader_src = fragment_shader_str.c_str();
 
@@ -425,16 +425,15 @@ int main(int argc, char const* argv[])
 	GLuint texture_handle;
 	glGenTextures(1, &texture_handle);
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(shader_program, "tex_sampler"), 0);
+	glUniform1i(glGetUniformLocation(shader_program, "tex_sampler"), 1);
 	glBindTexture(GL_TEXTURE_2D, texture_handle);
 	
 	GLuint environment_handle;
 	glGenTextures(1, &environment_handle);
 	glActiveTexture(GL_TEXTURE1);
-	glUniform1i(glGetUniformLocation(shader_program, "env_sampler"), 0); // maybe 1 instead of 0
+	glUniform1i(glGetUniformLocation(shader_program, "env_sampler"), 1); // maybe 1 instead of 0
 	glBindTexture(GL_TEXTURE_CUBE_MAP, environment_handle);
 	
-
 	//loading textures
 	unsigned char* image_data;
 	unsigned image_w;
@@ -454,70 +453,52 @@ int main(int argc, char const* argv[])
 	int i = 0;
 	for ( i ; i < 6; i++ ) {
 		switch (i) {
-
 			case 0:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_right.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 			case 1:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_left.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 			case 2:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_up.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 			case 3:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_down.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 			case 4:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_back.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 			case 5:
 				err_code =
 					lodepng_decode32_file(&image_data, &image_w, &image_h,
 						"../../common/data/cube_front.png");
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, image_w, image_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-				glGenerateMipmap(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-				glTexParameteri(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				break;
 		}
 		if (!err_code)
 			std::cout << "Read " << image_h << " x " << image_w << " image\n";
 	}
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	while (!glfwWindowShouldClose(window))
 	{
-
-
 		glfwGetFramebufferSize(window, &w_width, &w_height);
 
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -527,13 +508,12 @@ int main(int argc, char const* argv[])
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(g_rotation[0]), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelMatrix = glm::rotate(modelMatrix, glm::radians(g_rotation[1]), glm::vec3(1.0f, 0.0f, 0.0f));
 
-		viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -4.0f));
+		viewMatrix = glm::translate(viewMatrix, glm::vec3(0.0f, 0.0f, -2.0f));
 		projectionMatrix = glm::perspective(glm::radians(60.0f), float(w_width) / float(w_height), near, far);
 
 		GLuint location_model = glGetUniformLocation(shader_program, "model");
 		GLuint location_view = glGetUniformLocation(shader_program, "view");
 		GLuint location_projection = glGetUniformLocation(shader_program, "projection");
-
 
 		// uniform variable in vertex shader.
 		glUniformMatrix4fv(location_model, 1, GL_FALSE, glm::value_ptr(modelMatrix));

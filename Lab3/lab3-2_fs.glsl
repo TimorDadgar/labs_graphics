@@ -58,18 +58,12 @@ vec3 cook_torrance(vec3 light_dir, vec3 camera_dir){
 	//Number texture
 	vec4 tex = texture(tex_sampler, uv_coords);
 
-	//Reflection texture
-	vec3 reflection_vector = reflect(camera_dir, normal_n);
-	vec4 tex2 = texture(env_sampler, reflection_vector);
-	
     float kL = 0.2f;
     float kg = 0.8f; 
-    vec3 pL = vec3(0.8, 0.8, 0.3);
+    vec3 pL = vec3(0.3, 0.3, 1);
 	vec3 norm = normalize(normal); 
-	float r = 0.5;
 
-	//tex.r?? correct
-    vec3 cook_torr = r * tex2.rgb +(1-r)*(tex.r * kL*(pL) + kg*((F(h, light_dir)*G(light_dir, camera_dir, norm)*D(h))/ (4*(abs(dot(norm, light_dir))*(abs(dot(norm, camera_dir)))))));
+    vec3 cook_torr = tex.rgb *  kL*(pL) + kg*((F(h, light_dir)*G(light_dir, camera_dir, norm)*D(h))/ (4*(abs(dot(norm, light_dir))*(abs(dot(norm, camera_dir))))));
 
 	return cook_torr;
 }
@@ -77,20 +71,20 @@ vec3 cook_torrance(vec3 light_dir, vec3 camera_dir){
 
 void main () {
 	
-	/*
-	frag_colour.r = (normal_n.x+1)*0.5;
-	frag_colour.g = (normal_n.y+1)*0.5;
-	frag_colour.b = (normal_n.z+1)*0.5;
-	*/
 	vec3 light_direction = normalize(light_position[0] - position);
 	vec3 camera_direction = normalize(vec3(0.0f, 0.0f, 0.0f) - position);
 
+	//Reflection texture
+	vec3 reflection_vector = reflect(camera_direction, normal_n);
+	vec4 tex2 = texture(env_sampler, reflection_vector);
+
+	float r = 0.0;
 
 	for ( int l = 0; l < light_count; ++l )
 	{
 		frag_colour = light_colour[0]*3 * cook_torrance(light_direction, camera_direction) * max(0.2f, (dot(normalize(light_direction), normalize(normal))));
 	}
 
-	//frag_colour = vec3(position) + 0.45;
+	frag_colour = r*vec3(tex2)+ (1-r)*frag_colour;
 }
 
