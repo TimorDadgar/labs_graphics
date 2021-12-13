@@ -66,6 +66,7 @@ struct Intersection
 	vec3 point;
 	vec3 normal;
 	Material material;
+	int hit;
 };
 
 struct Sphere {
@@ -94,7 +95,6 @@ struct Scene {
 
 
 Scene scene;
-
 
 void init( )
 {
@@ -191,6 +191,23 @@ vec3 simple_sky(vec3 direction)
 }
 
 
+vec3 blinn_phong_brdf(vec3 in_direction, vec3 out_direction, Intersection I)
+{
+  // YOUR CODE GOES HERE
+  // Implement a Blinn-phong BRDF
+    //fr = kL (pL ...) + kg (pg ...)(n * h)
+
+    float kL = 0.5f;
+    float kg = 0.5f; 
+    vec3 h = normalize(in_direction+out_direction);
+    vec3 pL = I.material.color_diffuse/radians(180);
+    vec3 pg = I.material.color_glossy;
+    float s = I.material.roughness;
+
+    vec3 fr = kL*(pL) + kg*(pg*((8+s)/(8))*(pow(dot(I.normal, h),s)));
+    
+    return fr;
+}
 // Ray-sphere intersection
 float intersect(Ray ray, Sphere s) 
 {
@@ -260,6 +277,7 @@ Intersection intersect( Ray ray)
 		I.material.reflection = scene.spheres[i].material.reflection;
 		I.material.transmission = scene.spheres[i].material.transmission;
 		I.material.ior = scene.spheres[i].material.ior;
+		I.hit = 1;
 
     }
   }
@@ -282,6 +300,7 @@ Intersection intersect( Ray ray)
 		I.material.reflection = scene.ground_plane[0].material.reflection;
 		I.material.transmission = scene.ground_plane[0].material.transmission;
 		I.material.ior = scene.ground_plane[0].material.ior;
+		I.hit = 1;
       
       // Adding a procedural checkerboard texture:
       I.material.color_diffuse = (mod(floor(I.point.x) + floor(I.point.z),2.0) == 0.0) ?
@@ -304,6 +323,7 @@ Intersection intersect( Ray ray)
     I.material.reflection = 0.0;
     I.material.transmission = 0;
     I.material.ior = 1;
+	I.hit = 0;
 
   }
   return I;
@@ -319,6 +339,7 @@ vec3 raytrace()
     {
 
       Ray ray = ray_stack[ray_stack_pos];
+	  float contribution = ray.weight;
       Intersection isec = intersect(ray);
 
       vec3 nl = isec.normal * sign(-dot(isec.normal, ray.dir)); 
@@ -341,8 +362,8 @@ vec3 raytrace()
         // direction. Otherwise, use the block below for specular
         // reflection.
 
-	      Ray ray2 = ray;
-		  push( ray2 );
+		Ray ray2 = ray;
+		push( ray2 );
 
       }
       
@@ -351,8 +372,12 @@ vec3 raytrace()
         // YOUR TASK: Create new ray, compute its position, direction,
         // and weight, and call push(ray).
 
-	      Ray ray2 = ray;
-		  push( ray2 );
+		Ray ray2 = ray;
+		ray2.dir = normalize(reflect(ray.dir, isec.normal));
+		ray2.origin = isec.point + 0.001 * ray2.dir;
+		ray2.weight = ray.weight * reflectivity;
+		push( ray2 );
+		contribution -= ray2.weight;
 
       }
 
@@ -365,14 +390,25 @@ vec3 raytrace()
         // If it is in shadow, set a black (or dark "ambient") colour.
 
 		Ray ray_shadow = ray;
-		ray_shadow.origin = isec.point + 0.1 * -ray_shadow.dir;
+		ray_shadow.dir = normalize(isec.point - scene.sun_position);
+		ray_shadow.origin = isec.point + 0.001 * ray_shadow.dir;
+		Intersection isec_shadow = intersect(ray_shadow);
 
-        // YOUR TASK: If the point is not in shadow, compute the
-        // colour here (using your BRDF, as before).
+		vec3 light_direction = normalize(scene.sun_position - isec.point);
+		vec3 camera_direction = normalize(i_position - isec.point);
+
+		if( isec_shadow.hit == 1 )
+			this_color += (isec.material.color_emission + blinn_phong_brdf(light_direction, camera_direction, isec)) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal))));
         
-	      this_color = isec.material.color_diffuse + isec.material.color_emission;            
+		if( isec_shadow.hit == 0 )
+			this_color += isec.material.color_diffuse + isec.material.color_emission;
 
-	      color += this_color;
+
+		// YOUR TASK: If the point is not in shadow, compute the
+        // colour here (using your BRDF, as before).
+		this_color *= contribution;
+
+		color += this_color;
 
       }
 
@@ -409,7 +445,8 @@ void main() {
     Ray ray;
 	ray.origin = i_position;
 	ray.dir = normalize(cz * i_focal_dist + cx * (gl_FragCoord.x - i_window_size.x/2) + cy * (gl_FragCoord.y - i_window_size.y/2));
-    // Push the ray noto the ray stack
+    ray.weight = 1;
+	// Push the ray noto the ray stack
     push( ray );
     
     vec3 color = raytrace(); 
