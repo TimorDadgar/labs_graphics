@@ -1,0 +1,35 @@
+Question 1:
+How does your image change if you increase or decrease i_focal_dist? Can
+you explain this?
+
+Answer 1:
+Increasing or decreasing the i_focal_dist will increase and decrease the zoom of the view.
+This because L * focaldist + R(x-size.x/2) + U(y-size.y/2)
+L * focaldist blir då förhållandet mellan kameran och objektet.
+
+
+Question 2:
+How could you implement super-sampling for anti-aliasing here, to get
+smoother edges of the spheres, and less aliasing issues on the checkerboard
+texture?
+
+Answer 2: 
+For smoother edges of the spheres and for less aliasing on the checkerboard, one could implement
+two different solutions. Instead of casting a single ray that goes through the centre of each pixel, 
+One solution would be to randomize the direction within the pixel's area which will make the ray not super straight.
+Second solution is to send out a lot of rays and by calculating the average we can get diverging rays.
+
+
+
+Question 3:
+How does the maximum depth (MAX_DEPTH) influence the appearance of the
+scene? How would a refractive object appear at a ray depth of 1, 2 and 3? How
+about reflective objects? At which depth does your scene no longer change by
+increasing the ray depth further? Why?
+
+MAX_DEPTH 1: Doesn't have any bounces.
+MAX_DEPTH 2: Has one bounce/reflection and here we can see our initial reflection.
+MAX_DEPTH 3: Here there is a lot more reflections of many objects "recursively". 
+MAX_DEPTH 10: Not too different from 3, slightly more refined reflections. The weight of the rays and visibility of them are slim to none after so many iterations of the rays.
+
+Increasing the ray depth doesnt matter when the weight of the ray has become small enough.(close to 0)

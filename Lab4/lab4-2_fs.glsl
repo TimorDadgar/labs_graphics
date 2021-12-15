@@ -112,7 +112,7 @@ void init( )
 	scene.spheres[0].material.color_emission = vec3( 0 );
 	scene.spheres[0].material.roughness = 100;
 	scene.spheres[0].material.reflection = 0.5; //reflective red ball
-	scene.spheres[0].material.transmission = 0;
+	scene.spheres[0].material.transmission = 0.3;
 	scene.spheres[0].material.ior = 1;
   
 	scene.spheres[1].center = vec3(0.8, 0.3, 0.8);
@@ -161,7 +161,7 @@ void init( )
 	scene.ground_plane[0].material.color_glossy = vec3( 0 );
 	scene.ground_plane[0].material.roughness = 0;
 	scene.ground_plane[0].material.color_emission = vec3( 0 );
-	scene.ground_plane[0].material.reflection = 0.0;
+	scene.ground_plane[0].material.reflection = 0.3;
 	scene.ground_plane[0].material.transmission = 0;
 	scene.ground_plane[0].material.ior = 1;  
 }
@@ -200,11 +200,11 @@ vec3 blinn_phong_brdf(vec3 in_direction, vec3 out_direction, Intersection I)
     float kL = 0.5f;
     float kg = 0.5f; 
     vec3 h = normalize(in_direction+out_direction);
-    vec3 pL = I.material.color_diffuse/radians(180);
+    vec3 pL = I.material.color_diffuse;
     vec3 pg = I.material.color_glossy;
     float s = I.material.roughness;
 
-    vec3 fr = kL*(pL) + kg*(pg*((8+s)/(8))*(pow(dot(I.normal, h),s)));
+    vec3 fr = kL*(pL) + kg*(pg*((8+s)/(8))*(pow(max(0.0,dot(I.normal, h)),s)));
     
     return fr;
 }
@@ -222,14 +222,11 @@ float intersect(Ray ray, Sphere s)
 	float t_plus = (-b + sqrt(pow(b,2) - 4*a*c)) / (2*a); 
 	float t_minus = (-b - sqrt(pow(b,2) - 4*a*c)) / (2*a); 
 
-	if( t_plus >= 0 && t_minus >= 0)
-		return min(t_plus, t_minus);
-	else if(  t_plus >= 0 )
-		return t_plus;
-	else if(  t_minus >= 0 )
-		return t_minus;
+	float whatevs = min(t_plus, t_minus);
+	if (whatevs >= 0)
+		return whatevs;
 	else
-		return 1e32; //"Infinitely far away"
+		return 1e32;
 }
 
 // Ray-plane intersection
@@ -348,6 +345,8 @@ vec3 raytrace()
       vec3 this_color = vec3(0);
             
       float reflectivity = isec.material.reflection;
+	  float transparency = isec.material.transmission;
+
 
       if (isec.material.transmission > 0)
       {
@@ -363,7 +362,15 @@ vec3 raytrace()
         // reflection.
 
 		Ray ray2 = ray;
+		float check_dot = dot(ray.dir, isec.normal);
+		if( check_dot > 0 )
+			ray2.dir = normalize(refract(ray.dir, -isec.normal, isec.material.ior/1));
+		else
+			ray2.dir = normalize(refract(ray.dir, isec.normal, 1/isec.material.ior));
+		ray2.origin = isec.point + 0.001 * ray2.dir;
+		ray2.weight = ray.weight * transparency;
 		push( ray2 );
+		contribution -= ray2.weight;
 
       }
       
@@ -390,19 +397,15 @@ vec3 raytrace()
         // If it is in shadow, set a black (or dark "ambient") colour.
 
 		Ray ray_shadow = ray;
-		ray_shadow.dir = normalize(isec.point - scene.sun_position);
+		ray_shadow.dir = normalize(scene.sun_position - isec.point);
 		ray_shadow.origin = isec.point + 0.001 * ray_shadow.dir;
 		Intersection isec_shadow = intersect(ray_shadow);
 
 		vec3 light_direction = normalize(scene.sun_position - isec.point);
 		vec3 camera_direction = normalize(i_position - isec.point);
 
-		if( isec_shadow.hit == 1 )
+		if( isec_shadow.hit == 0 || isec.material.color_emission == vec3(1, 0, 0))
 			this_color += (isec.material.color_emission + blinn_phong_brdf(light_direction, camera_direction, isec)) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal))));
-        
-		if( isec_shadow.hit == 0 )
-			this_color += isec.material.color_diffuse + isec.material.color_emission;
-
 
 		// YOUR TASK: If the point is not in shadow, compute the
         // colour here (using your BRDF, as before).
