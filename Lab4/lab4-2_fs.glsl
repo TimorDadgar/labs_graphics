@@ -208,6 +208,63 @@ vec3 blinn_phong_brdf(vec3 in_direction, vec3 out_direction, Intersection I)
     
     return fr;
 }
+
+
+vec3 F(vec3 n, vec3 l, Intersection I){
+	
+	vec3 F0 = I.material.color_diffuse;
+
+	vec3 fresnel = F0 + (1-F0) * pow((1-max(0.0f, (dot(normalize(n), normalize(l))))), 5);
+
+	return fresnel;
+}
+
+float D(vec3 m, vec3 normal){
+
+	int x_scalar = 0;
+	float alpha = 0.3;
+
+	float n_scalar_m = dot(normalize(normal), normalize(m));
+
+	if(n_scalar_m >= 0)
+		x_scalar = 1;
+	else
+		x_scalar = 0;
+
+	float alpha_temp = x_scalar / (3.1415*pow(alpha,2)*pow(n_scalar_m,4));
+	float exp_temp = exp((pow(n_scalar_m, 2)-1) / (pow(alpha, 2) * pow(n_scalar_m,2)));
+
+	float NDF = alpha_temp * exp_temp;
+
+	return NDF;
+}
+
+float G(vec3 light_dir, vec3 camera_dir, vec3 norm){
+
+	vec3 h = normalize(light_dir+camera_dir);
+
+	float g_temp = min(1, 2*(dot(norm, h)*(dot(norm, camera_dir)) / (dot(camera_dir, h))));
+	float smith_G = min(g_temp , 2*(dot(norm, h)*(dot(norm, light_dir)) / (dot(camera_dir, h))));
+
+	return smith_G;
+}
+
+vec3 cook_torrance(vec3 light_dir, vec3 camera_dir, Intersection I){
+
+	vec3 h = normalize(light_dir+camera_dir);
+	
+    float kL = 0.5f;
+    float kg = 0.5f; 
+    vec3 pL = I.material.color_diffuse;
+    vec3 pg = I.material.color_glossy;
+	vec3 norm = normalize(I.normal); 
+
+    vec3 cook_torr = kL*(pL) + kg*((F(h, light_dir, I)*G(light_dir, camera_dir, norm)*D(h, norm))/ (4*(abs(dot(norm, light_dir))*(abs(dot(norm, camera_dir))))));
+
+	return cook_torr;
+}
+
+
 // Ray-sphere intersection
 float intersect(Ray ray, Sphere s) 
 {
@@ -228,6 +285,7 @@ float intersect(Ray ray, Sphere s)
 	else
 		return 1e32;
 }
+
 
 // Ray-plane intersection
 float intersect(Ray ray, Plane p) 
@@ -405,8 +463,9 @@ vec3 raytrace()
 		vec3 camera_direction = normalize(i_position - isec.point);
 
 		if( isec_shadow.hit == 0 || isec.material.color_emission == vec3(1, 0, 0))
-			this_color += (isec.material.color_emission + blinn_phong_brdf(light_direction, camera_direction, isec)) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal))));
-
+			this_color += isec.material.color_emission + blinn_phong_brdf(light_direction, camera_direction, isec) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal)))); 
+			
+			//this_color += isec.material.color_emission + cook_torrance(light_direction, camera_direction, isec) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal)))); 
 		// YOUR TASK: If the point is not in shadow, compute the
         // colour here (using your BRDF, as before).
 		this_color *= contribution;

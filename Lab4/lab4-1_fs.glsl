@@ -348,7 +348,7 @@ vec3 raycast(Ray ray)
 		color = isec.material.color_diffuse + isec.material.color_emission;
 
 	else
-		color = isec.material.color_emission + vec3(1, 1, 1)*2 * cook_torrance(light_direction, camera_direction, isec) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal))));
+		color = isec.material.color_emission + vec3(1, 1, 1)*2 * (cook_torrance(light_direction, camera_direction, isec) * max(0.2f, (dot(normalize(light_direction), normalize(isec.normal)))));
 
 	return color;
 }
